@@ -1,36 +1,18 @@
-//http://jonisalonen.com/2012/from-utf-16-to-utf-8-in-javascript/
-function toUTF8Array(str) {
-    var utf8 = [];
-    for (var i = 0; i < str.length; i++) {
-        var charcode = str.charCodeAt(i);
-        if (charcode < 0x80) utf8.push(charcode);
-        else if (charcode < 0x800) {
-            utf8.push(0xc0 | (charcode >> 6), 0x80 | (charcode & 0x3f));
-        } else if (charcode < 0xd800 || charcode >= 0xe000) {
-            utf8.push(
-                0xe0 | (charcode >> 12),
-                0x80 | ((charcode >> 6) & 0x3f),
-                0x80 | (charcode & 0x3f)
-            );
-        }
-        // surrogate pair
-        else {
-            i++;
-            // UTF-16 encodes 0x10000-0x10FFFF by
-            // subtracting 0x10000 and splitting the
-            // 20 bits of 0x0-0xFFFFF into two halves
-            charcode =
-                0x10000 +
-                (((charcode & 0x3ff) << 10) | (str.charCodeAt(i) & 0x3ff));
-            utf8.push(
-                0xf0 | (charcode >> 18),
-                0x80 | ((charcode >> 12) & 0x3f),
-                0x80 | ((charcode >> 6) & 0x3f),
-                0x80 | (charcode & 0x3f)
-            );
-        }
+/**
+ * Converts input into a binary/latin1-encoded array
+ * @param {*} str
+ * @return {Number[]}
+ */
+function toBinaryArray(str) {
+    if (typeof str === "number") {
+        // somehow numbers are passed into here from the reader
+        str = str.toString();
     }
-    return utf8;
+    if (typeof str !== "string") {
+        // just in case there are other non-strings passed in
+        return [];
+    }
+    return str.split("").map(char => char.charCodeAt(0)); // split and map to char code
 }
 
 function toInt(val) {
@@ -86,19 +68,6 @@ class BufferStream {
         return this.increment(2);
     }
 
-    writeTwoUint16s(value) {
-        this.checkSize(4);
-        const first = value >> 16;
-        const second = value & 0xffff;
-        this.view.setUint16(this.offset, toInt(first), this.isLittleEndian);
-        this.view.setUint16(
-            this.offset + 2,
-            toInt(second),
-            this.isLittleEndian
-        );
-        return this.increment(4);
-    }
-
     writeInt16(value) {
         this.checkSize(2);
         this.view.setInt16(this.offset, toInt(value), this.isLittleEndian);
@@ -131,13 +100,13 @@ class BufferStream {
 
     writeString(value) {
         value = value || "";
-        var utf8 = toUTF8Array(value),
-            bytelen = utf8.length;
+        var bin = toBinaryArray(value),
+            bytelen = bin.length;
 
         this.checkSize(bytelen);
         var startOffset = this.offset;
         for (var i = 0; i < bytelen; i++) {
-            this.view.setUint8(startOffset, utf8[i]);
+            this.view.setUint8(startOffset, bin[i]);
             startOffset++;
         }
         return this.increment(bytelen);
@@ -225,17 +194,16 @@ class BufferStream {
     }
 
     readString(length) {
-        var chars = [];
-        var start = this.offset;
-        var end = this.offset + length;
-        if (end >= this.buffer.byteLength) {
-            end = this.buffer.byteLength;
+        var string = "";
+
+        var numOfMulti = length,
+            index = 0;
+        while (index++ < numOfMulti) {
+            var charCode = this.readUint8();
+            string += String.fromCharCode(charCode);
         }
-        for (let i = start; i < end; ++i) {
-            chars.push(String.fromCharCode(this.view.getUint8(i)));
-            this.increment(1);
-        }
-        return chars.join("");
+
+        return string;
     }
 
     readHex(length) {
@@ -259,24 +227,12 @@ class BufferStream {
     }
 
     concat(stream) {
-        var available = this.buffer.byteLength - this.offset;
-        if (stream.size > available) {
-            let newbuf = new ArrayBuffer(this.offset + stream.size);
-            let int8 = new Uint8Array(newbuf);
-            int8.set(new Uint8Array(this.getBuffer(0, this.offset)));
-            int8.set(
-                new Uint8Array(stream.getBuffer(0, stream.size)),
-                this.offset
-            );
-            this.buffer = newbuf;
-            this.view = new DataView(this.buffer);
-        } else {
-            let int8 = new Uint8Array(this.buffer);
-            int8.set(
-                new Uint8Array(stream.getBuffer(0, stream.size)),
-                this.offset
-            );
-        }
+        var newbuf = new ArrayBuffer(this.offset + stream.size),
+            int8 = new Uint8Array(newbuf);
+        int8.set(new Uint8Array(this.getBuffer(0, this.offset)));
+        int8.set(new Uint8Array(stream.getBuffer(0, stream.size)), this.offset);
+        this.buffer = newbuf;
+        this.view = new DataView(this.buffer);
         this.offset += stream.size;
         this.size = this.offset;
         return this.buffer.byteLength;
