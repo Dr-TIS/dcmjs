@@ -477,7 +477,7 @@ class CodeString extends StringRepresentation {
 class AgeString extends StringRepresentation {
     constructor() {
         super("AS");
-        this.maxLength = 20;
+        this.maxLength = 35;
         this.padByte = "20";
         this.fixed = true;
         this.defaultValue = "";
