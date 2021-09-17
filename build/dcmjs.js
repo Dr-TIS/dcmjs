@@ -1639,7 +1639,7 @@
 	    _classCallCheck(this, AgeString);
 
 	    _this3 = _possibleConstructorReturn(this, _getPrototypeOf(AgeString).call(this, "AS"));
-	    _this3.maxLength = 4;
+	    _this3.maxLength = 20;
 	    _this3.padByte = "20";
 	    _this3.fixed = true;
 	    _this3.defaultValue = "";
