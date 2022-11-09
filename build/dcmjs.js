@@ -12454,11 +12454,11 @@ b"+i+"*=d\
 	  var tempBuffer = labelmapBufferArray[m].slice(0); // temp list for checking overlaps
 
 	  var tempSegmentsOnFrame = lodash_clonedeep(segmentsOnFrameArray[m]);
-	  /* split overlapping SEGs algorithm for each segment: 
+	  /* split overlapping SEGs algorithm for each segment:
 	  A) copy the labelmapBuffer in the array with index 0
 	  B) add the segment pixel per pixel on the copied buffer from (A)
 	  C) if no overlap, copy the results back on the orignal array from (A)
-	  D) if overlap, repeat increasing the index m up to M (if out of memory, add new buffer in the array and M++); 
+	  D) if overlap, repeat increasing the index m up to M (if out of memory, add new buffer in the array and M++);
 	  */
 
 	  var numberOfSegs = multiframe.SegmentSequence.length;

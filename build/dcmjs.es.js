@@ -1175,7 +1175,9 @@ function () {
   }, {
     key: "write",
     value: function write(stream, type) {
+      console.log('OSTRASSS ', stream, type);
       var args = Array.from(arguments);
+      console.log('OsTRASSS ', args);
 
       if (args[2] === null || args[2] === "" || args[2] === undefined) {
         return [stream.writeString("")];
@@ -1633,7 +1635,7 @@ function (_StringRepresentation3) {
     _classCallCheck(this, AgeString);
 
     _this3 = _possibleConstructorReturn(this, _getPrototypeOf(AgeString).call(this, "AS"));
-    _this3.maxLength = 20;
+    _this3.maxLength = 35;
     _this3.padByte = "20";
     _this3.fixed = true;
     _this3.defaultValue = "";
