@@ -793,6 +793,16 @@ function () {
       return this.increment(2);
     }
   }, {
+    key: "writeTwoUint16s",
+    value: function writeTwoUint16s(value) {
+      this.checkSize(4);
+      var first = value >> 16;
+      var second = value & 0xffff;
+      this.view.setUint16(this.offset, toInt(first), this.isLittleEndian);
+      this.view.setUint16(this.offset + 2, toInt(second), this.isLittleEndian);
+      return this.increment(4);
+    }
+  }, {
     key: "writeInt16",
     value: function writeInt16(value) {
       this.checkSize(2);
@@ -1175,9 +1185,7 @@ function () {
   }, {
     key: "write",
     value: function write(stream, type) {
-      console.log('OSTRASSS ', stream, type);
       var args = Array.from(arguments);
-      console.log('calamares ', args);
 
       if (args[2] === null || args[2] === "" || args[2] === undefined) {
         return [stream.writeString("")];
