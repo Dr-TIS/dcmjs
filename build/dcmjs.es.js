@@ -992,12 +992,21 @@ function () {
   }, {
     key: "concat",
     value: function concat(stream) {
-      var newbuf = new ArrayBuffer(this.offset + stream.size),
-          int8 = new Uint8Array(newbuf);
-      int8.set(new Uint8Array(this.getBuffer(0, this.offset)));
-      int8.set(new Uint8Array(stream.getBuffer(0, stream.size)), this.offset);
-      this.buffer = newbuf;
-      this.view = new DataView(this.buffer);
+      var available = this.buffer.byteLength - this.offset;
+
+      if (stream.size > available) {
+        var newbuf = new ArrayBuffer(this.offset + stream.size);
+        var int8 = new Uint8Array(newbuf);
+        int8.set(new Uint8Array(this.getBuffer(0, this.offset)));
+        int8.set(new Uint8Array(stream.getBuffer(0, stream.size)), this.offset);
+        this.buffer = newbuf;
+        this.view = new DataView(this.buffer);
+      } else {
+        var _int = new Uint8Array(this.buffer);
+
+        _int.set(new Uint8Array(stream.getBuffer(0, stream.size)), this.offset);
+      }
+
       this.offset += stream.size;
       this.size = this.offset;
       return this.buffer.byteLength;
